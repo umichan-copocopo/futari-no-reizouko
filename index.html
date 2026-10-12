@@ -37,13 +37,29 @@
     .empty{padding:16px;text-align:center;color:#9c8e97;font-size:13px}
     .footer-note{font-size:11px;color:#978b94;text-align:center;margin:16px 0}
     .toast{position:fixed;top:15px;left:50%;transform:translateX(-50%);background:#493c49;color:white;padding:10px 16px;border-radius:99px;font-size:12px;opacity:0;pointer-events:none;transition:.2s;z-index:20}.toast.show{opacity:1}
-    .modal-back{position:fixed;inset:0;background:#3a263344;display:none;align-items:flex-end;justify-content:center;z-index:10;padding:14px}.modal-back.show{display:flex}.modal{background:white;border-radius:22px;padding:18px;width:min(100%,500px);box-shadow:var(--shadow)}.modal h3{margin:0 0 12px}
+    .login-wrap{max-width:460px;margin:8vh auto;padding:20px}.login-wrap .card{padding:22px}.login-wrap h2{margin-top:0}.login-wrap p{font-size:13px;line-height:1.7}.login-wrap .field{margin:5px 0 10px}.status{font-size:12px;color:#8c7b86;margin:8px 0;min-height:18px}
     @media(min-width:620px){.app{padding-top:28px}.quick button{padding:17px}.nav{bottom:14px;left:50%;right:auto;transform:translateX(-50%);width:min(700px,calc(100% - 30px));border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow)}}
   </style>
 </head>
 <body>
+<div id="login-screen" class="login-wrap">
+  <div class="card">
+    <div style="font-size:36px">🥬🏡</div>
+    <h2>ふたりの冷蔵庫</h2>
+    <p>登録したメールアドレスとパスワードでログインしてね。2人で同じデータを共有できるよ。</p>
+    <form id="login-form">
+      <label for="email">メールアドレス</label>
+      <input id="email" class="field" type="email" autocomplete="username" required>
+      <label for="password">パスワード</label>
+      <input id="password" class="field" type="password" autocomplete="current-password" required>
+      <button class="btn" style="width:100%;margin-top:6px" type="submit">ログイン</button>
+    </form>
+    <div id="login-status" class="status" role="status"></div>
+  </div>
+</div>
+<div id="app-screen" hidden>
 <div class="app">
-  <header><div class="logo">🥬</div><div><h1>ふたりの冷蔵庫</h1><div class="sub">ふたりの暮らしを、ちょっと楽しく。</div></div><div class="badge">🌷 おうち管理</div></header>
+  <header><div class="logo">🥬</div><div><h1>ふたりの冷蔵庫</h1><div class="sub">ふたりの暮らしを、ちょっと楽しく。</div></div><button id="logout-button" class="btn small secondary">ログアウト</button></header>
   <section class="hero"><h2>ふたりで整える、今日のおうち 🏡</h2><p>献立も、食材も、お買い物も。<br>ふたりのペースで、ゆるっと管理しよう。</p></section>
   <div class="quick">
     <button onclick="showPanel('meals')"><span class="emoji">🍚</span><strong>週間献立</strong></button>
@@ -58,44 +74,50 @@
       <div class="card"><div class="row"><div class="grow"><b>🧻 日用品メモ</b><div class="muted" id="home-supplies-summary">日用品を登録しよう</div></div><button class="btn small mint" onclick="showPanel('supplies')">見る</button></div></div>
       <div class="section-title"><h2>🍽️ 今日の献立</h2><span class="hint" id="today-label"></span></div>
       <div class="card" id="today-meal"></div>
-      <p class="footer-note">いまはこの端末に保存する試作版です。共有機能は次のステップで追加するよ。</p>
     </section>
-    <section id="meals" class="panel">
-      <div class="section-title"><h2>🍚 1週間の献立</h2><span class="hint">自由に入力してね</span></div>
-      <div class="card" id="meal-list"></div>
-      <button class="btn mint" onclick="addMealToGroceries()">🛒 買い物リストにメモを追加</button>
-    </section>
-    <section id="groceries" class="panel">
-      <div class="section-title"><h2>🛒 買い物リスト</h2><span class="hint" id="grocery-count"></span></div>
-      <div class="card"><div class="form"><input id="grocery-input" class="field" placeholder="例：牛乳、卵、玉ねぎ"><button class="btn" onclick="addItem('groceries','grocery-input')">追加</button></div><div id="grocery-list"></div></div>
-      <button class="btn secondary" onclick="clearCompleted()">☑️ 買ったものを片づける</button>
-    </section>
-    <section id="pantry" class="panel">
-      <div class="section-title"><h2>🥬 冷蔵庫・食品在庫</h2><span class="hint">＋／−で数量を変更</span></div>
-      <div class="card"><div class="form"><input id="pantry-input" class="field" placeholder="例：卵"><button class="btn" onclick="addItem('pantry','pantry-input')">追加</button></div><div id="pantry-list"></div></div>
-    </section>
-    <section id="supplies" class="panel">
-      <div class="section-title"><h2>🧻 日用品のストック</h2><span class="hint">少なくなったら買い物へ</span></div>
-      <div class="card"><div class="form"><input id="supplies-input" class="field" placeholder="例：洗濯洗剤"><button class="btn" onclick="addItem('supplies','supplies-input')">追加</button></div><div id="supplies-list"></div></div>
-    </section>
+    <section id="meals" class="panel"><div class="section-title"><h2>🍚 1週間の献立</h2><span class="hint">自由に入力してね</span></div><div class="card" id="meal-list"></div><button class="btn mint" onclick="addMealToGroceries()">🛒 買い物リストにメモを追加</button></section>
+    <section id="groceries" class="panel"><div class="section-title"><h2>🛒 買い物リスト</h2><span class="hint" id="grocery-count"></span></div><div class="card"><div class="form"><input id="grocery-input" class="field" placeholder="例：牛乳、卵、玉ねぎ"><button class="btn" onclick="addItem('groceries','grocery-input')">追加</button></div><div id="grocery-list"></div></div><button class="btn secondary" onclick="clearCompleted()">☑️ 買ったものを片づける</button></section>
+    <section id="pantry" class="panel"><div class="section-title"><h2>🥬 冷蔵庫・食品在庫</h2><span class="hint">＋／−で数量を変更</span></div><div class="card"><div class="form"><input id="pantry-input" class="field" placeholder="例：卵"><button class="btn" onclick="addItem('pantry','pantry-input')">追加</button></div><div id="pantry-list"></div></div></section>
+    <section id="supplies" class="panel"><div class="section-title"><h2>🧻 日用品のストック</h2><span class="hint">少なくなったら買い物へ</span></div><div class="card"><div class="form"><input id="supplies-input" class="field" placeholder="例：洗濯洗剤"><button class="btn" onclick="addItem('supplies','supplies-input')">追加</button></div><div id="supplies-list"></div></div></section>
   </main>
 </div>
 <nav class="nav">
-  <button class="active" data-panel="home" onclick="showPanel('home')"><span>🏠</span>ホーム</button>
-  <button data-panel="meals" onclick="showPanel('meals')"><span>🍚</span>献立</button>
-  <button data-panel="groceries" onclick="showPanel('groceries')"><span>🛒</span>買い物</button>
-  <button data-panel="pantry" onclick="showPanel('pantry')"><span>🥬</span>在庫</button>
-  <button data-panel="supplies" onclick="showPanel('supplies')"><span>🧻</span>日用品</button>
+  <button class="active" data-panel="home" onclick="showPanel('home')"><span>🏠</span>ホーム</button><button data-panel="meals" onclick="showPanel('meals')"><span>🍚</span>献立</button><button data-panel="groceries" onclick="showPanel('groceries')"><span>🛒</span>買い物</button><button data-panel="pantry" onclick="showPanel('pantry')"><span>🥬</span>在庫</button><button data-panel="supplies" onclick="showPanel('supplies')"><span>🧻</span>日用品</button>
 </nav>
+</div>
 <div class="toast" id="toast"></div>
-<script>
+<script type="module">
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js';
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js';
+import { getDatabase, ref, onValue, set } from 'https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js';
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCQPgBP5ewkV3yUHJ8qCN97WNyTKJuDJW8",
+  authDomain: "futari-no-reizouko.firebaseapp.com",
+  databaseURL: "https://futari-no-reizouko-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "futari-no-reizouko",
+  storageBucket: "futari-no-reizouko.firebasestorage.app",
+  messagingSenderId: "465961806546",
+  appId: "1:465961806546:web:0d75783a714cf031771b0b"
+};
+const ALLOWED_UIDS = ['lBwKSpDfOORYSle4tMd6qtsmweH3', 'Bnpxte8akbhHOdY6ULPj0YZ2AMY2'];
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getDatabase(app);
+const sharedRef = ref(db, 'shared/state');
 const DAYS=['月','火','水','木','金','土','日'];
 const key='futari-no-reizouko-v1';
 let state;
+let loadingRemote = false;
+let remoteReady = false;
+let lastRemoteJSON = '';
 function blank(){return {meals:{月:'',火:'',水:'',木:'',金:'',土:'',日:''},groceries:[],pantry:[],supplies:[]}}
-function load(){try{state=JSON.parse(localStorage.getItem(key))||blank()}catch(e){state=blank()}}
-function save(){localStorage.setItem(key,JSON.stringify(state));render();toast('保存したよ 🌷')}
+function loadLocal(){try{return JSON.parse(localStorage.getItem(key))||blank()}catch(e){return blank()}}
+function setLoginStatus(s){document.getElementById('login-status').textContent=s}
+function showApp(){document.getElementById('login-screen').hidden=true;document.getElementById('app-screen').hidden=false}
+function showLogin(){document.getElementById('login-screen').hidden=false;document.getElementById('app-screen').hidden=true}
 function toast(s){const t=document.getElementById('toast');t.textContent=s;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1500)}
+function save(){if(!state||!auth.currentUser||!remoteReady||loadingRemote)return;const json=JSON.stringify(state);localStorage.setItem(key,json);lastRemoteJSON=json;set(sharedRef,state).then(()=>toast('ふたりに保存したよ 🌷')).catch(e=>{console.error(e);toast('保存できなかったよ。通信や設定を確認してね')});render()}
 function showPanel(id){document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.panel===id));window.scrollTo({top:0,behavior:'smooth'});render()}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function addItem(type,inputId){const el=document.getElementById(inputId),name=el.value.trim();if(!name){el.focus();return}state[type].push({id:Date.now()+Math.random(),name,qty:1,done:false,low:false});el.value='';save()}
@@ -111,9 +133,22 @@ function listHTML(type){const arr=state[type];if(!arr.length)return '<div class=
  if(type==='pantry')return `<div class="item"><div class="grow"><div class="name">${esc(x.name)}</div><div class="muted">在庫の目安</div></div><div class="qty"><button onclick="changeQty('${type}',${x.id},-1)">−</button><b>${x.qty}</b><button onclick="changeQty('${type}',${x.id},1)">＋</button></div><button class="btn small secondary" onclick="rename('${type}',${x.id})">編集</button><button class="btn small" onclick="del('${type}',${x.id})">×</button></div>`;
  return `<div class="item"><div class="grow"><div class="name">${esc(x.name)}</div><div class="muted">${x.low?'⚠️ 買い足しが必要':'ストックあり'}</div></div><button class="btn small ${x.low?'mint':'secondary'}" onclick="toggleLow(${x.id})">${x.low?'買い物へ':'少なくなった'}</button><button class="btn small" onclick="del('${type}',${x.id})">×</button></div>`;
  }).join('')}
-function renderMeals(){const el=document.getElementById('meal-list');el.innerHTML=DAYS.map(d=>`<div class="meal-day"><div class="day">${d}曜日</div><input class="field" value="${esc(state.meals[d]||'')}" placeholder="献立を入力…" onchange="state.meals['${d}']=this.value;save()"></div>`).join('');const now=new Date(),day=(now.getDay()+6)%7,d=DAYS[day];document.getElementById('today-label').textContent=d+'曜日';document.getElementById('today-meal').innerHTML=state.meals[d]?`<b>${esc(state.meals[d])}</b>`:'<div class="muted">まだ決まっていないよ。献立から入力してね ✨';}
+function renderMeals(){const el=document.getElementById('meal-list');el.innerHTML=DAYS.map(d=>`<div class="meal-day"><div class="day">${d}曜日</div><input class="field" value="${esc(state.meals[d]||'')}" placeholder="献立を入力…" onchange="state.meals['${d}']=this.value;save()"></div>`).join('');const now=new Date(),day=(now.getDay()+6)%7,d=DAYS[day];document.getElementById('today-label').textContent=d+'曜日';document.getElementById('today-meal').innerHTML=state.meals[d]?`<b>${esc(state.meals[d])}</b>`:'<div class="muted">まだ決まっていないよ。献立から入力してね ✨</div>'}
 function render(){if(!state)return;document.getElementById('grocery-list').innerHTML=listHTML('groceries');document.getElementById('pantry-list').innerHTML=listHTML('pantry');document.getElementById('supplies-list').innerHTML=listHTML('supplies');document.getElementById('grocery-count').textContent=state.groceries.filter(x=>!x.done).length+'個';document.getElementById('home-grocery-summary').textContent=`買うもの ${state.groceries.filter(x=>!x.done).length}個`;document.getElementById('home-pantry-summary').textContent=`登録済み ${state.pantry.length}種類`;document.getElementById('home-supplies-summary').textContent=`買い足しメモ ${state.supplies.filter(x=>x.low).length}件`;renderMeals()}
-load();render();
+window.showPanel=showPanel;window.addItem=addItem;window.del=del;window.changeQty=changeQty;window.toggleDone=toggleDone;window.toggleLow=toggleLow;window.rename=rename;window.clearCompleted=clearCompleted;window.addMealToGroceries=addMealToGroceries;
+document.getElementById('login-form').addEventListener('submit',async e=>{e.preventDefault();setLoginStatus('ログイン中…');try{await signInWithEmailAndPassword(auth,document.getElementById('email').value.trim(),document.getElementById('password').value)}catch(err){console.error(err);setLoginStatus('ログインできなかったよ。メールアドレスとパスワードを確認してね。')}});
+document.getElementById('logout-button').addEventListener('click',()=>signOut(auth));
+onAuthStateChanged(auth,user=>{
+ remoteReady=false;loadingRemote=false;
+ if(!user){showLogin();setLoginStatus('');return}
+ if(!ALLOWED_UIDS.includes(user.uid)){signOut(auth);showLogin();setLoginStatus('このアカウントは利用対象外だよ。登録した2人のアカウントでログインしてね。');return}
+ showApp();setLoginStatus('');
+ onValue(sharedRef,snap=>{
+   const data=snap.val();
+   if(data){loadingRemote=true;state=data;localStorage.setItem(key,JSON.stringify(state));lastRemoteJSON=JSON.stringify(state);render();loadingRemote=false;remoteReady=true;}
+   else if(!remoteReady){state=loadLocal();render();remoteReady=true;const json=JSON.stringify(state);lastRemoteJSON=json;set(sharedRef,state).catch(e=>{console.error(e);toast('初回保存に失敗したよ。設定を確認してね')});}
+ },err=>{console.error(err);toast('共有データを読み込めなかったよ。データベースのルールを確認してね')});
+});
 if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(()=>{});
 </script>
 </body>
