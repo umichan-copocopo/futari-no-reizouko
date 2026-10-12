@@ -1,0 +1,17 @@
+{
+  "name": "ふたりの冷蔵庫",
+  "short_name": "ふたりの冷蔵庫",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fffaf7",
+  "theme_color": "#fff4ed",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

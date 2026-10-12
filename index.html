@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#fff4ed">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="ふたりの冷蔵庫">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="icon.svg">
+  <title>ふたりの冷蔵庫</title>
+  <style>
+    :root{--ink:#453b49;--pink:#ffb7c5;--peach:#ffd9bd;--yellow:#fff0a8;--mint:#c8f0df;--lav:#ded4ff;--paper:#fffaf7;--white:#fff;--line:#f0e4e0;--shadow:0 8px 24px #71535c12}
+    *{box-sizing:border-box} body{margin:0;background:linear-gradient(180deg,#fff5ee,#fffafd 45%,#f7fffb);font-family:system-ui,-apple-system,"Hiragino Kaku Gothic ProN","Yu Gothic",sans-serif;color:var(--ink)}
+    button,input,textarea,select{font:inherit} button{cursor:pointer;border:0}
+    .app{max-width:760px;margin:auto;min-height:100dvh;padding:18px 16px 100px}
+    header{display:flex;align-items:center;gap:12px;margin:4px 0 18px}.logo{width:54px;height:54px;border-radius:19px;background:linear-gradient(135deg,var(--pink),var(--peach));display:grid;place-items:center;font-size:29px;box-shadow:var(--shadow)}
+    h1{font-size:22px;margin:0;letter-spacing:.02em} .sub{font-size:12px;color:#8c7b86;margin-top:3px}
+    .badge{margin-left:auto;background:#fff;border:1px solid var(--line);border-radius:99px;padding:7px 10px;font-size:11px;white-space:nowrap}
+    .hero{background:linear-gradient(120deg,#ffe2e5,#fff1c9 60%,#dff7ec);border-radius:25px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+    .hero h2{font-size:19px;margin:0 0 7px}.hero p{font-size:13px;line-height:1.6;margin:0}
+    .quick{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin:16px 0}.quick button{background:#fff;border:1px solid var(--line);border-radius:18px;padding:13px 7px;box-shadow:var(--shadow);color:var(--ink)}.quick .emoji{display:block;font-size:25px;margin-bottom:5px}.quick strong{font-size:12px}
+    .panel{display:none}.panel.active{display:block;animation:pop .18s ease}@keyframes pop{from{opacity:.4;transform:translateY(4px)}to{opacity:1;transform:none}}
+    .section-title{display:flex;align-items:center;justify-content:space-between;margin:18px 2px 10px}.section-title h2{font-size:17px;margin:0}.hint{font-size:11px;color:#988a94}
+    .card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:15px;margin-bottom:11px;box-shadow:var(--shadow)}
+    .row{display:flex;align-items:center;gap:9px}.row>*:first-child{min-width:0}.grow{flex:1}
+    .pill{border-radius:99px;background:#fff0f3;padding:5px 9px;font-size:11px}
+    .field{width:100%;border:1px solid #eadfe4;background:#fffdfc;border-radius:12px;padding:11px;color:var(--ink);outline:none}.field:focus{border-color:#e7a7b7;box-shadow:0 0 0 3px #ffb7c522}
+    .form{display:flex;gap:8px;margin:10px 0}.form .field{min-width:0}
+    .btn{border-radius:12px;padding:10px 13px;background:var(--pink);color:#4c3440;font-weight:700;white-space:nowrap}.btn.secondary{background:#f2eaff}.btn.mint{background:var(--mint)}.btn.small{padding:7px 10px;font-size:12px}
+    .nav{position:fixed;bottom:0;left:0;right:0;background:#ffffffed;backdrop-filter:blur(12px);border-top:1px solid var(--line);display:flex;justify-content:center;gap:4px;padding:9px max(8px,env(safe-area-inset-right)) calc(9px + env(safe-area-inset-bottom));z-index:5}
+    .nav button{flex:1;max-width:125px;background:transparent;color:#8b7c86;padding:8px 3px;border-radius:14px;font-size:11px}.nav button span{display:block;font-size:20px;margin-bottom:2px}.nav button.active{background:#fff0f3;color:#694957;font-weight:700}
+    .item{display:flex;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid #f4ecea}.item:last-child{border-bottom:0}.item .name{font-weight:650;font-size:14px}.muted{color:#978b94;font-size:12px}.check{width:22px;height:22px;accent-color:#e997ad;flex-shrink:0}.done .name{text-decoration:line-through;color:#aaa}
+    .qty{display:flex;align-items:center;gap:8px}.qty button{width:29px;height:29px;border-radius:50%;background:#f6efff;font-weight:700}.qty b{min-width:14px;text-align:center;font-size:13px}
+    .meal-day{display:grid;grid-template-columns:62px 1fr;gap:10px;align-items:center;padding:10px 0;border-bottom:1px solid #f4ecea}.meal-day:last-child{border-bottom:0}.day{font-weight:750;font-size:13px}.meal-day .field{padding:9px}
+    .empty{padding:16px;text-align:center;color:#9c8e97;font-size:13px}
+    .footer-note{font-size:11px;color:#978b94;text-align:center;margin:16px 0}
+    .toast{position:fixed;top:15px;left:50%;transform:translateX(-50%);background:#493c49;color:white;padding:10px 16px;border-radius:99px;font-size:12px;opacity:0;pointer-events:none;transition:.2s;z-index:20}.toast.show{opacity:1}
+    .modal-back{position:fixed;inset:0;background:#3a263344;display:none;align-items:flex-end;justify-content:center;z-index:10;padding:14px}.modal-back.show{display:flex}.modal{background:white;border-radius:22px;padding:18px;width:min(100%,500px);box-shadow:var(--shadow)}.modal h3{margin:0 0 12px}
+    @media(min-width:620px){.app{padding-top:28px}.quick button{padding:17px}.nav{bottom:14px;left:50%;right:auto;transform:translateX(-50%);width:min(700px,calc(100% - 30px));border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow)}}
+  </style>
+</head>
+<body>
+<div class="app">
+  <header><div class="logo">🥬</div><div><h1>ふたりの冷蔵庫</h1><div class="sub">ふたりの暮らしを、ちょっと楽しく。</div></div><div class="badge">🌷 おうち管理</div></header>
+  <section class="hero"><h2>ふたりで整える、今日のおうち 🏡</h2><p>献立も、食材も、お買い物も。<br>ふたりのペースで、ゆるっと管理しよう。</p></section>
+  <div class="quick">
+    <button onclick="showPanel('meals')"><span class="emoji">🍚</span><strong>週間献立</strong></button>
+    <button onclick="showPanel('groceries')"><span class="emoji">🛒</span><strong>買い物リスト</strong></button>
+    <button onclick="showPanel('pantry')"><span class="emoji">🥑</span><strong>冷蔵庫の在庫</strong></button>
+  </div>
+  <main>
+    <section id="home" class="panel active">
+      <div class="section-title"><h2>🧺 いまのメモ</h2><span class="hint">タップして編集できるよ</span></div>
+      <div class="card"><div class="row"><div class="grow"><b>🛒 買い物リスト</b><div class="muted" id="home-grocery-summary">買うものを登録しよう</div></div><button class="btn small" onclick="showPanel('groceries')">見る</button></div></div>
+      <div class="card"><div class="row"><div class="grow"><b>🥬 冷蔵庫の在庫</b><div class="muted" id="home-pantry-summary">食材を登録しよう</div></div><button class="btn small secondary" onclick="showPanel('pantry')">見る</button></div></div>
+      <div class="card"><div class="row"><div class="grow"><b>🧻 日用品メモ</b><div class="muted" id="home-supplies-summary">日用品を登録しよう</div></div><button class="btn small mint" onclick="showPanel('supplies')">見る</button></div></div>
+      <div class="section-title"><h2>🍽️ 今日の献立</h2><span class="hint" id="today-label"></span></div>
+      <div class="card" id="today-meal"></div>
+      <p class="footer-note">いまはこの端末に保存する試作版です。共有機能は次のステップで追加するよ。</p>
+    </section>
+    <section id="meals" class="panel">
+      <div class="section-title"><h2>🍚 1週間の献立</h2><span class="hint">自由に入力してね</span></div>
+      <div class="card" id="meal-list"></div>
+      <button class="btn mint" onclick="addMealToGroceries()">🛒 買い物リストにメモを追加</button>
+    </section>
+    <section id="groceries" class="panel">
+      <div class="section-title"><h2>🛒 買い物リスト</h2><span class="hint" id="grocery-count"></span></div>
+      <div class="card"><div class="form"><input id="grocery-input" class="field" placeholder="例：牛乳、卵、玉ねぎ"><button class="btn" onclick="addItem('groceries','grocery-input')">追加</button></div><div id="grocery-list"></div></div>
+      <button class="btn secondary" onclick="clearCompleted()">☑️ 買ったものを片づける</button>
+    </section>
+    <section id="pantry" class="panel">
+      <div class="section-title"><h2>🥬 冷蔵庫・食品在庫</h2><span class="hint">＋／−で数量を変更</span></div>
+      <div class="card"><div class="form"><input id="pantry-input" class="field" placeholder="例：卵"><button class="btn" onclick="addItem('pantry','pantry-input')">追加</button></div><div id="pantry-list"></div></div>
+    </section>
+    <section id="supplies" class="panel">
+      <div class="section-title"><h2>🧻 日用品のストック</h2><span class="hint">少なくなったら買い物へ</span></div>
+      <div class="card"><div class="form"><input id="supplies-input" class="field" placeholder="例：洗濯洗剤"><button class="btn" onclick="addItem('supplies','supplies-input')">追加</button></div><div id="supplies-list"></div></div>
+    </section>
+  </main>
+</div>
+<nav class="nav">
+  <button class="active" data-panel="home" onclick="showPanel('home')"><span>🏠</span>ホーム</button>
+  <button data-panel="meals" onclick="showPanel('meals')"><span>🍚</span>献立</button>
+  <button data-panel="groceries" onclick="showPanel('groceries')"><span>🛒</span>買い物</button>
+  <button data-panel="pantry" onclick="showPanel('pantry')"><span>🥬</span>在庫</button>
+  <button data-panel="supplies" onclick="showPanel('supplies')"><span>🧻</span>日用品</button>
+</nav>
+<div class="toast" id="toast"></div>
+<script>
+const DAYS=['月','火','水','木','金','土','日'];
+const key='futari-no-reizouko-v1';
+let state;
+function blank(){return {meals:{月:'',火:'',水:'',木:'',金:'',土:'',日:''},groceries:[],pantry:[],supplies:[]}}
+function load(){try{state=JSON.parse(localStorage.getItem(key))||blank()}catch(e){state=blank()}}
+function save(){localStorage.setItem(key,JSON.stringify(state));render();toast('保存したよ 🌷')}
+function toast(s){const t=document.getElementById('toast');t.textContent=s;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1500)}
+function showPanel(id){document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.panel===id));window.scrollTo({top:0,behavior:'smooth'});render()}
+function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
+function addItem(type,inputId){const el=document.getElementById(inputId),name=el.value.trim();if(!name){el.focus();return}state[type].push({id:Date.now()+Math.random(),name,qty:1,done:false,low:false});el.value='';save()}
+function del(type,id){state[type]=state[type].filter(x=>x.id!==id);save()}
+function changeQty(type,id,delta){const x=state[type].find(x=>x.id===id);if(x){x.qty=Math.max(0,(Number(x.qty)||0)+delta);save()}}
+function toggleDone(id){const x=state.groceries.find(x=>x.id===id);if(x){x.done=!x.done;save()}}
+function toggleLow(id){const x=state.supplies.find(x=>x.id===id);if(x){x.low=!x.low;save()}}
+function rename(type,id){const x=state[type].find(x=>x.id===id);if(!x)return;const n=prompt('名前を編集',x.name);if(n&&n.trim()){x.name=n.trim();save()}}
+function clearCompleted(){state.groceries=state.groceries.filter(x=>!x.done);save()}
+function addMealToGroceries(){const text=prompt('買い物リストに追加したいものを入力してね（複数なら「、」で区切ってね）');if(!text)return;text.split(/[、,，]/).map(x=>x.trim()).filter(Boolean).forEach(name=>state.groceries.push({id:Date.now()+Math.random(),name,qty:1,done:false}));save();showPanel('groceries')}
+function listHTML(type){const arr=state[type];if(!arr.length)return '<div class="empty">まだ登録がないよ。上から追加してね 🌼</div>';return arr.map(x=>{
+ if(type==='groceries')return `<div class="item ${x.done?'done':''}"><input class="check" type="checkbox" ${x.done?'checked':''} onchange="toggleDone(${x.id})"><div class="grow"><div class="name">${esc(x.name)}</div></div><button class="btn small secondary" onclick="rename('${type}',${x.id})">編集</button><button class="btn small" onclick="del('${type}',${x.id})">×</button></div>`;
+ if(type==='pantry')return `<div class="item"><div class="grow"><div class="name">${esc(x.name)}</div><div class="muted">在庫の目安</div></div><div class="qty"><button onclick="changeQty('${type}',${x.id},-1)">−</button><b>${x.qty}</b><button onclick="changeQty('${type}',${x.id},1)">＋</button></div><button class="btn small secondary" onclick="rename('${type}',${x.id})">編集</button><button class="btn small" onclick="del('${type}',${x.id})">×</button></div>`;
+ return `<div class="item"><div class="grow"><div class="name">${esc(x.name)}</div><div class="muted">${x.low?'⚠️ 買い足しが必要':'ストックあり'}</div></div><button class="btn small ${x.low?'mint':'secondary'}" onclick="toggleLow(${x.id})">${x.low?'買い物へ':'少なくなった'}</button><button class="btn small" onclick="del('${type}',${x.id})">×</button></div>`;
+ }).join('')}
+function renderMeals(){const el=document.getElementById('meal-list');el.innerHTML=DAYS.map(d=>`<div class="meal-day"><div class="day">${d}曜日</div><input class="field" value="${esc(state.meals[d]||'')}" placeholder="献立を入力…" onchange="state.meals['${d}']=this.value;save()"></div>`).join('');const now=new Date(),day=(now.getDay()+6)%7,d=DAYS[day];document.getElementById('today-label').textContent=d+'曜日';document.getElementById('today-meal').innerHTML=state.meals[d]?`<b>${esc(state.meals[d])}</b>`:'<div class="muted">まだ決まっていないよ。献立から入力してね ✨';}
+function render(){if(!state)return;document.getElementById('grocery-list').innerHTML=listHTML('groceries');document.getElementById('pantry-list').innerHTML=listHTML('pantry');document.getElementById('supplies-list').innerHTML=listHTML('supplies');document.getElementById('grocery-count').textContent=state.groceries.filter(x=>!x.done).length+'個';document.getElementById('home-grocery-summary').textContent=`買うもの ${state.groceries.filter(x=>!x.done).length}個`;document.getElementById('home-pantry-summary').textContent=`登録済み ${state.pantry.length}種類`;document.getElementById('home-supplies-summary').textContent=`買い足しメモ ${state.supplies.filter(x=>x.low).length}件`;renderMeals()}
+load();render();
+if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(()=>{});
+</script>
+</body>
+</html>
