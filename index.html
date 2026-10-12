@@ -100,14 +100,14 @@ const firebaseConfig = {
   messagingSenderId: "465961806546",
   appId: "1:465961806546:web:0d75783a714cf031771b0b"
 };
-const ALLOWED_UIDS =  ['lBwKSpDfOORYSle4tMd6qtsmweH3', 'FPvSwHxqClNTHzCSzvFa7V1ymPJ3'];
+const ALLOWED_UIDS = ['lBwKSpDfOORYSle4tMd6qtsmweH3', 'FPvSwHxqClNTHzCSzvFa7V1ymPJ3'];
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
 const db = getDatabase(app);
 const sharedRef = ref(db, 'shared/state');
 const DAYS=['月','火','水','木','金','土','日'];
 const key='futari-no-reizouko-v1';
-let state;
+let state = blank();
 let loadingRemote = false;
 let remoteReady = false;
 let lastRemoteJSON = '';
@@ -117,7 +117,7 @@ function setLoginStatus(s){document.getElementById('login-status').textContent=s
 function showApp(){document.getElementById('login-screen').hidden=true;document.getElementById('app-screen').hidden=false}
 function showLogin(){document.getElementById('login-screen').hidden=false;document.getElementById('app-screen').hidden=true}
 function toast(s){const t=document.getElementById('toast');t.textContent=s;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1500)}
-function save(){if(!state||!auth.currentUser||!remoteReady||loadingRemote)return;const json=JSON.stringify(state);localStorage.setItem(key,json);lastRemoteJSON=json;set(sharedRef,state).then(()=>toast('ふたりに保存したよ 🌷')).catch(e=>{console.error(e);toast('保存できなかったよ。通信や設定を確認してね')});render()}
+function save(){if(!state||!auth.currentUser)return;if(!remoteReady||loadingRemote){render();toast('データを読み込み中だよ。少し待ってからもう一度試してね');return}const json=JSON.stringify(state);localStorage.setItem(key,json);lastRemoteJSON=json;set(sharedRef,state).then(()=>toast('ふたりに保存したよ 🌷')).catch(e=>{console.error(e);toast('保存できなかったよ。通信や設定を確認してね')});render()}
 function showPanel(id){document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.id===id));document.querySelectorAll('.nav button').forEach(b=>b.classList.toggle('active',b.dataset.panel===id));window.scrollTo({top:0,behavior:'smooth'});render()}
 function esc(s){return String(s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]))}
 function addItem(type,inputId){const el=document.getElementById(inputId),name=el.value.trim();if(!name){el.focus();return}state[type].push({id:Date.now()+Math.random(),name,qty:1,done:false,low:false});el.value='';save()}
@@ -135,7 +135,7 @@ function listHTML(type){const arr=state[type];if(!arr.length)return '<div class=
  }).join('')}
 function renderMeals(){const el=document.getElementById('meal-list');el.innerHTML=DAYS.map(d=>`<div class="meal-day"><div class="day">${d}曜日</div><input class="field" value="${esc(state.meals[d]||'')}" placeholder="献立を入力…" onchange="state.meals['${d}']=this.value;save()"></div>`).join('');const now=new Date(),day=(now.getDay()+6)%7,d=DAYS[day];document.getElementById('today-label').textContent=d+'曜日';document.getElementById('today-meal').innerHTML=state.meals[d]?`<b>${esc(state.meals[d])}</b>`:'<div class="muted">まだ決まっていないよ。献立から入力してね ✨</div>'}
 function render(){if(!state)return;document.getElementById('grocery-list').innerHTML=listHTML('groceries');document.getElementById('pantry-list').innerHTML=listHTML('pantry');document.getElementById('supplies-list').innerHTML=listHTML('supplies');document.getElementById('grocery-count').textContent=state.groceries.filter(x=>!x.done).length+'個';document.getElementById('home-grocery-summary').textContent=`買うもの ${state.groceries.filter(x=>!x.done).length}個`;document.getElementById('home-pantry-summary').textContent=`登録済み ${state.pantry.length}種類`;document.getElementById('home-supplies-summary').textContent=`買い足しメモ ${state.supplies.filter(x=>x.low).length}件`;renderMeals()}
-window.showPanel=showPanel;window.addItem=addItem;window.del=del;window.changeQty=changeQty;window.toggleDone=toggleDone;window.toggleLow=toggleLow;window.rename=rename;window.clearCompleted=clearCompleted;window.addMealToGroceries=addMealToGroceries;
+window.state=state;window.save=save;window.showPanel=showPanel;window.addItem=addItem;window.del=del;window.changeQty=changeQty;window.toggleDone=toggleDone;window.toggleLow=toggleLow;window.rename=rename;window.clearCompleted=clearCompleted;window.addMealToGroceries=addMealToGroceries;
 document.getElementById('login-form').addEventListener('submit',async e=>{e.preventDefault();setLoginStatus('ログイン中…');try{await signInWithEmailAndPassword(auth,document.getElementById('email').value.trim(),document.getElementById('password').value)}catch(err){console.error(err);setLoginStatus('ログインできなかったよ。メールアドレスとパスワードを確認してね。')}});
 document.getElementById('logout-button').addEventListener('click',()=>signOut(auth));
 onAuthStateChanged(auth,user=>{
@@ -145,8 +145,8 @@ onAuthStateChanged(auth,user=>{
  showApp();setLoginStatus('');
  onValue(sharedRef,snap=>{
    const data=snap.val();
-   if(data){loadingRemote=true;state=data;localStorage.setItem(key,JSON.stringify(state));lastRemoteJSON=JSON.stringify(state);render();loadingRemote=false;remoteReady=true;}
-   else if(!remoteReady){state=loadLocal();render();remoteReady=true;const json=JSON.stringify(state);lastRemoteJSON=json;set(sharedRef,state).catch(e=>{console.error(e);toast('初回保存に失敗したよ。設定を確認してね')});}
+   if(data){loadingRemote=true;state={...blank(),...data,meals:{...blank().meals,...(data.meals||{})},groceries:Array.isArray(data.groceries)?data.groceries:[],pantry:Array.isArray(data.pantry)?data.pantry:[],supplies:Array.isArray(data.supplies)?data.supplies:[]};window.state=state;localStorage.setItem(key,JSON.stringify(state));lastRemoteJSON=JSON.stringify(state);render();loadingRemote=false;remoteReady=true;}
+   else if(!remoteReady){state=loadLocal();window.state=state;render();remoteReady=true;const json=JSON.stringify(state);lastRemoteJSON=json;set(sharedRef,state).catch(e=>{console.error(e);toast('初回保存に失敗したよ。設定を確認してね')});}
  },err=>{console.error(err);toast('共有データを読み込めなかったよ。データベースのルールを確認してね')});
 });
 if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('./sw.js').catch(()=>{});
